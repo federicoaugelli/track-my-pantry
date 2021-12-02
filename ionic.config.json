@@ -1,0 +1,7 @@
+{
+  "name": "Track my pantry",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue"
+}
