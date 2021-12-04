@@ -1,0 +1,83 @@
+<template>
+  <ion-page>
+    <ion-header>
+		<ion-text style="text-align: center;">
+			<h1>Sign In</h1>
+		</ion-text>
+    </ion-header>
+
+    <ion-content :fullscreen="true">
+		<ion-header collapse="condense">
+			<ion-toolbar>
+				<ion-title size="large">login</ion-title>
+			</ion-toolbar>
+		</ion-header>
+
+		<ion-text>
+			<h2>Email:</h2>
+		</ion-text>
+		<ion-input placeholder="enter username" color="secondary" enterkeyhint="submit" required></ion-input>
+		<ion-text>
+			<h2>Password:</h2>
+		</ion-text>
+		<ion-input placeholder="enter password" color="secondary" enterkeyhint="submit" required></ion-input>
+
+		<ion-item-divider></ion-item-divider>
+
+		<ion-button size="medium" color="secondary" expand="block" href="/tabs/tab1">Login</ion-button>
+
+		<ion-text style="text-align: center;">
+			<h1>Not registered yet?</h1>
+		</ion-text>
+
+		<ion-text>
+			<h2>Username:</h2>
+		</ion-text>
+		<ion-input placeholder="enter username" color="danger" enterkeyhint="submit" required></ion-input>
+		<ion-text>
+			<h2>Email:</h2>
+		</ion-text>
+		<ion-input placeholder="enter username" color="danger" enterkeyhint="submit" required></ion-input>
+		<ion-text>
+			<h2>Password:</h2>
+		</ion-text>
+		<ion-input placeholder="enter password" color="danger" enterkeyhint="submit" required></ion-input>
+
+		<ion-item-divider></ion-item-divider>
+
+		<ion-button size="medium" color="danger" expand="block">Signup</ion-button>
+
+      
+    </ion-content>
+  </ion-page>
+</template>
+
+
+<script lang="ts">
+import { IonPage, IonHeader, IonContent, IonButton, IonText, IonInput, IonItemDivider } from '@ionic/vue';
+import { defineComponent } from "vue";
+import axios from "axios";
+
+export default defineComponent ({
+	name: "startingpage",
+	components: { IonHeader, IonContent, IonPage, IonButton, IonText, IonInput, IonItemDivider },
+	data() {
+		return {
+			some: null
+		};
+	},
+	methods: {
+		register() {
+			axios.post(this.projectEndpoint + "users").then((result) => {
+				//some code
+			})
+		},
+
+		login() {
+			axios.post(this.projectEndpoint + "login").then((result) => {
+				//some code
+			})
+		},
+	},
+})
+</script>
