@@ -1,0 +1,1 @@
+export const projectEndpoint = 'https://lam21.iot-prism-lab.cs.unibo.it/';

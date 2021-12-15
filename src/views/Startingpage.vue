@@ -16,15 +16,15 @@
 		<ion-text>
 			<h2>Email:</h2>
 		</ion-text>
-		<ion-input placeholder="enter username" color="secondary" enterkeyhint="submit" required></ion-input>
+		<ion-input placeholder="enter username" color="secondary" enterkeyhint="submit" v-model="emaillogin" required></ion-input>
 		<ion-text>
 			<h2>Password:</h2>
 		</ion-text>
-		<ion-input placeholder="enter password" color="secondary" enterkeyhint="submit" required></ion-input>
+		<ion-input placeholder="enter password" color="secondary" enterkeyhint="submit" v-model="passwordlogin" required></ion-input>
 
 		<ion-item-divider></ion-item-divider>
 
-		<ion-button size="medium" color="secondary" expand="block" href="/tabs/tab1">Login</ion-button>
+		<ion-button style="text-align: center;" size="medium" color="secondary" @click="login">Login</ion-button>
 
 		<ion-text style="text-align: center;">
 			<h1>Not registered yet?</h1>
@@ -33,19 +33,19 @@
 		<ion-text>
 			<h2>Username:</h2>
 		</ion-text>
-		<ion-input placeholder="enter username" color="danger" enterkeyhint="submit" required></ion-input>
+		<ion-input placeholder="enter username" color="danger" enterkeyhint="submit" v-model="usernameregister" required></ion-input>
 		<ion-text>
 			<h2>Email:</h2>
 		</ion-text>
-		<ion-input placeholder="enter username" color="danger" enterkeyhint="submit" required></ion-input>
+		<ion-input placeholder="enter username" color="danger" enterkeyhint="submit" v-model="emailregister" required></ion-input>
 		<ion-text>
 			<h2>Password:</h2>
 		</ion-text>
-		<ion-input placeholder="enter password" color="danger" enterkeyhint="submit" required></ion-input>
+		<ion-input placeholder="enter password" color="danger" enterkeyhint="submit" v-model="passwordregister" required></ion-input>
 
 		<ion-item-divider></ion-item-divider>
 
-		<ion-button size="medium" color="danger" expand="block">Signup</ion-button>
+		<ion-button size="medium" color="danger" @click="register">register</ion-button>
 
       
     </ion-content>
@@ -63,20 +63,35 @@ export default defineComponent ({
 	components: { IonHeader, IonContent, IonPage, IonButton, IonText, IonInput, IonItemDivider },
 	data() {
 		return {
-			some: null
+			emaillogin: '',
+			passwordlogin: '',
+			usernameregister: '',
+			emailregister: '',
+			passwordregister: '',
+			token: '',
+			projectEndpoint: "https://lam21.iot-prism-lab.cs.unibo.it/"
 		};
 	},
 	methods: {
 		register() {
-			axios.post(this.projectEndpoint + "users").then((result) => {
-				//some code
+			const registerform = { username: this.usernameregister, email: this.emailregister, password: this.passwordregister }
+			axios.post(this.projectEndpoint + "users", registerform).then((result) => {
+				this.$router.push('/tabs/tab1')
 			})
+			.catch(error => {
+				console.log(error)
+      })
 		},
 
 		login() {
-			axios.post(this.projectEndpoint + "login").then((result) => {
-				//some code
+			const loginform = { email: this.emaillogin, password: this.passwordlogin }
+			axios.post(this.projectEndpoint + "auth/login", loginform).then((result) => {
+				this.$router.push('/tabs/tab1')
+				this.token = result.data
 			})
+			.catch(error => {
+				console.log(error)
+      })
 		},
 	},
 })

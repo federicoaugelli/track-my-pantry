@@ -44,6 +44,7 @@ export default defineComponent ({
     created() {
       axios.get(this.testEndpoint + "users").then((result) => {
           this.users = result.data;
+          console.log(result.data);
         });
     },
 /*
