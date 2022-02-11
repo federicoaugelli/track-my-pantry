@@ -2,11 +2,15 @@
   <ion-header>
     <ion-toolbar>
       <ion-title>{{ title }}</ion-title>
+      <ion-button slot="end" @click="closeModal" color="jjj">
+        Close
+      </ion-button>
     </ion-toolbar>
   </ion-header>
     <ion-content class="ion-padding" color="" fullscreen v-if="loader == false">
+      <div style="margin: 20px; text-align: center;">
       <ion-text>
-        <h2 style="text-align: center;">Digit your barcode:</h2>
+        <h2 style="text-align: center;">Digit your barcode</h2>
       </ion-text>
       <ion-input v-model="barcodee" type="search" placeholder="digit your barcode" enterkeyhint="search" inputmode="numeric" required>
       </ion-input>
@@ -33,6 +37,7 @@
       <ion-item-divider></ion-item-divider>
 
       <ion-button color="tertiary" expand="full" @click="postProductDetails">Post product</ion-button>
+      </div>
     </ion-content>
 
     <ion-content v-if="loader == true">
@@ -43,7 +48,7 @@
 </template>
 
 <script>
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonInput, IonButton, IonItemDivider, IonText } from '@ionic/vue';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonInput, IonButton, IonItemDivider, IonText, modalController, toastController } from '@ionic/vue';
 import { defineComponent } from 'vue';
 import axios from "axios";
 import { projectEndpoint } from "../UsefulData"
@@ -62,24 +67,49 @@ export default defineComponent({
       barcodee: '',
       //projectEndpoint: 'https://lam21.iot-prism-lab.cs.unibo.it/',
       loader: false,
-      token: 'ckwxqeyrp1826052bqxjr6fr8g9'
+      //token: 'ckwxqeyrp1826052bqxjr6fr8g9'
     };
   },
 
   methods: {
+    closeModal(){
+      modalController.dismiss()
+    },
+
     postProductDetails() {
-      const product = { token: this.token, name: this.namee, description: this.descriptionn, barcode: this.barcodee, test: false }
-      axios.post(projectEndpoint + "products", product, {
-        headers: {
-          Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJja3d4cWM2ZnAxODI1ODYyYnF4ancwcHluMGoiLCJpYXQiOjE2Mzk1OTAyOTgsImV4cCI6MTY0MDE5NTA5OH0.5vGgMPY-HpTAAix51AlmB26p_GYeJ9lzJleCN_5G_WQ'
-        }
-      }).then((result) => {
-        console.log(result.data)
-      })
-      .catch(error => {
-        console.log(error)
-      })
+      const product = { token: this.$store.state.sessiontoken, name: this.namee, description: this.descriptionn, barcode: this.barcodee, test: true }
+      if (product.barcode != '' && product.token != '' && product.name != '' && product.description != '') {
+        axios.post(this.$store.state.projectEndPoint + "products", product, {
+          headers: {
+            Authorization: this.$store.state.token
+          }
+        }).then((result) => {
+          console.log(result.data);
+          this.closeModal();
+        })
+        .catch(error => {
+          console.log(error);
+          this.openFailedToast();
+        })
+      }
+      else {
+        this.openFailedToast();
+      }
+    },
+
+    async openFailedToast() {
+      const toast = await toastController
+        .create({
+          message: 'Error',
+          duration: 2000,
+          position: "top"
+        })
+      return toast.present();
     },
   },
 });
 </script>
+
+<style type="text/css">
+  
+</style>
