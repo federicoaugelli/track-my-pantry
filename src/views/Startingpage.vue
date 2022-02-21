@@ -1,15 +1,15 @@
 <template>
   <ion-page>
     <ion-header>
-		<ion-text style="text-align: center;">
-			<h1>Track my Pantry</h1>
-		</ion-text>
+      <ion-toolbar>
+        <ion-title>Track my pantry</ion-title>
+      </ion-toolbar>
     </ion-header>
 
     <ion-content :fullscreen="true">
 		<ion-header collapse="condense">
 			<ion-toolbar>
-				<ion-title size="large">login</ion-title>
+				<ion-title size="large">Track my pantry</ion-title>
 			</ion-toolbar>
 		</ion-header>
 
@@ -25,7 +25,7 @@
 			</ion-text>
 			<ion-input type="password" placeholder="enter password" enterkeyhint="submit" v-model="passwordlogin" required></ion-input>
 
-			<ion-item-divider></ion-item-divider>
+			<div style="height: 50px;"></div>
 
 			<ion-button style="text-align: center;" size="medium" color="secondary" @click="login">Login</ion-button>
 			<ion-button style="text-align: center;" size="medium" color="danger" @click="registerForm = true">Register</ion-button>
@@ -41,13 +41,13 @@
 			<ion-text>
 				<h2>Email:</h2>
 			</ion-text>
-			<ion-input placeholder="enter username" enterkeyhint="submit" v-model="emailregister" required></ion-input>
+			<ion-input placeholder="enter email" enterkeyhint="submit" v-model="emailregister" required></ion-input>
 			<ion-text>
 				<h2>Password:</h2>
 			</ion-text>
 			<ion-input type="password" placeholder="enter password" enterkeyhint="submit" v-model="passwordregister" required></ion-input>
 
-			<ion-item-divider></ion-item-divider>
+			<div style="height: 50px;"></div>
 
 			<ion-button size="medium" color="secondary" @click="register">Register</ion-button>
 			<ion-button size="medium" color="danger" @click="registerForm = false">Login</ion-button>
@@ -59,13 +59,13 @@
 
 
 <script lang="ts">
-import { IonPage, IonHeader, IonContent, IonButton, IonText, IonInput, IonItemDivider, toastController } from '@ionic/vue';
+import { IonPage, IonHeader, IonContent, IonButton, IonText, IonInput, toastController } from '@ionic/vue';
 import { defineComponent } from "vue";
 import axios from "axios";
 
 export default defineComponent ({
 	name: "startingpage",
-	components: { IonHeader, IonContent, IonPage, IonButton, IonText, IonInput, IonItemDivider },
+	components: { IonHeader, IonContent, IonPage, IonButton, IonText, IonInput },
 	data() {
 		return {
 			emaillogin: '',
@@ -79,10 +79,10 @@ export default defineComponent ({
 		};
 	},
 	methods: {
+		/* REGISTER */
 		register() {
 			const registerform = { username: this.usernameregister, email: this.emailregister, password: this.passwordregister }
 			axios.post(this.$store.state.projectEndPoint + "users", registerform).then((result) => {
-				//this.$router.push('/')
 				this.registerForm = false;
 				this.openSuccessToast();
 			})
@@ -92,6 +92,7 @@ export default defineComponent ({
       })
 		},
 
+		/* LOGIN */
 		login() {
 			const loginform = { email: this.emaillogin, password: this.passwordlogin }
 			axios.post(this.$store.state.projectEndPoint + "auth/login", loginform).then((result) => {
@@ -99,14 +100,13 @@ export default defineComponent ({
 				console.log(result.data.accessToken)
 				const init = new String("Bearer ")
 				this.$store.state.token = init + result.data.accessToken
-				//console.log(this.token)
-				//this.$store.mutations.updataa(this.$store.state.token, result.data.accessToken)
 			})
 			.catch(error => {
 				this.openUnsuccessLoginToast();
       })
 		},
 
+		/* TOASTS */
 		async openSuccessToast() {
       const toast = await toastController
         .create({
@@ -153,7 +153,7 @@ export default defineComponent ({
 		margin: 30px;
 		text-align: center;
 		position: relative;
-		top: 20%;
+		top: 10%;
 	}
 
 	.register {
@@ -163,6 +163,6 @@ export default defineComponent ({
 		margin: 30px;
 		text-align: center;
 		position: relative;
-		top: 15%;
+		top: 5%;
 	}
 </style>

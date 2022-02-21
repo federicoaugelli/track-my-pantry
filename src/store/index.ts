@@ -28,7 +28,6 @@ export default createStore({
 
     async getItems(state, elem) {
       ionicStorage.forEach((key, value, index) => {
-        console.log(key);
         elem.push(key);
       })
     },
@@ -42,7 +41,10 @@ export default createStore({
         userId: elem.userId,
         test: true,
         createdAt: elem.createdAt,
-        updatedAt: elem.updatedAt
+        updatedAt: elem.updatedAt,
+        rating: elem.rating,
+        type: elem.type,
+        expiracy: elem.expiracy
       }
       ionicStorage.set(elem.name, payload);
     },

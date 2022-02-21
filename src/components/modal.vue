@@ -7,6 +7,8 @@
       </ion-button>
     </ion-toolbar>
   </ion-header>
+
+    <!-- ADD PRODUCT TO GLOBAL DATABASE -->
     <ion-content class="ion-padding" color="" fullscreen v-if="loader == false">
       <div style="margin: 20px; text-align: center;">
       <ion-text>
@@ -14,12 +16,6 @@
       </ion-text>
       <ion-input v-model="barcodee" type="search" placeholder="digit your barcode" enterkeyhint="search" inputmode="numeric" required>
       </ion-input>
-      <ion-item-divider color=""></ion-item-divider>
-      <ion-text>
-        <h2 style="text-align: center;">Or take a photo of them!</h2>
-      </ion-text>
-      <ion-item-divider color=""></ion-item-divider>
-      <ion-button color="tertiary" size="medium">Open Camera</ion-button>
       <ion-item-divider color=""></ion-item-divider>
 
       <ion-text>
@@ -34,7 +30,7 @@
       <ion-input v-model="descriptionn" type="search" placeholder="description" enterkeyhint="search" required>
       </ion-input>
 
-      <ion-item-divider></ion-item-divider>
+      <div style="height: 30px;"></div>
 
       <ion-button color="tertiary" expand="full" @click="postProductDetails">Post product</ion-button>
       </div>
@@ -76,6 +72,7 @@ export default defineComponent({
       modalController.dismiss()
     },
 
+    /* POST PRODUCT DETAILS */
     postProductDetails() {
       const product = { token: this.$store.state.sessiontoken, name: this.namee, description: this.descriptionn, barcode: this.barcodee, test: true }
       if (product.barcode != '' && product.token != '' && product.name != '' && product.description != '') {
@@ -84,11 +81,9 @@ export default defineComponent({
             Authorization: this.$store.state.token
           }
         }).then((result) => {
-          console.log(result.data);
           this.closeModal();
         })
         .catch(error => {
-          console.log(error);
           this.openFailedToast();
         })
       }
@@ -97,6 +92,7 @@ export default defineComponent({
       }
     },
 
+    /* toast */
     async openFailedToast() {
       const toast = await toastController
         .create({

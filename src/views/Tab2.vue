@@ -13,82 +13,81 @@
         </ion-toolbar>
       </ion-header>
 
-      <ion-refresher slot="fixed" @ionRefresh="doRefresh($event)">
-        <ion-refresher-content></ion-refresher-content>
-      </ion-refresher>
-
+      <!-- SEARCHBOX -->
       <div class="searchbox">
         <input class="searchbar" type="search" placeholder="search" v-model="searchQuery">
       </div>
 
-      <ion-card v-for="(product, index) in resultQuery" :key="index">
-        <div v-if="product.barcode != ''">
-          <ion-card-header>
-            <ion-card-title style="text-align: center;">{{ product.name }}</ion-card-title>
-            <ion-card-subtitle>barcode: {{ product.barcode }}</ion-card-subtitle>
-            <ion-img v-if="product.img" :src="product.img"></ion-img>
-          </ion-card-header>
-          <ion-card-content>
-            <ion-item>{{ product.description }}</ion-item>
-            <ion-button color="danger" expand="block" @click="removeItem(product.name), deleteEvent(product.name)">Remove to pantry</ion-button>
-            <ion-item>
-              <ion-label>created: {{ product.createdAt }}</ion-label>
-              <ion-label>updated: {{ product.updatedAt }}</ion-label>
-            </ion-item>
-          </ion-card-content>
-        </div>
-      </ion-card>
+      <!-- FILTERBOX -->
+      <div style="text-align: center;">
+        <ion-button @click="searchQuery = 'Fish'" color="dark" size="small">fish</ion-button>
+        <ion-button @click="searchQuery = 'Meat'" color="dark" size="small">meat</ion-button>
+        <ion-button @click="searchQuery = 'Sides'" color="dark" size="small">sides</ion-button>
+        <ion-button @click="searchQuery = 'Home'" color="dark" size="small">home</ion-button>
+        <ion-button @click="searchQuery = 'Other'" color="dark" size="small">other</ion-button>
+        <ion-button v-if="searchQuery != ''" @click="searchQuery = ''" color="danger" size="small">cancel</ion-button>
+      </div>
 
-<!--
-      <button @click="getKeys()">get</button>
-      <button @click="addKey()">add</button>
-      <button @click="getItems()">getall</button>
-      <button @click="clear()">clear</button>
--->
+      <!-- card -->
+      <div style="margin-top: 10px" class="card" v-for="(product, index) in resultQuery" :key="index">
+        <div v-if="product.barcode != ''">
+          <h1 style="margin-bottom: 20px">{{ product.name }}</h1>
+          <h6 style="color: grey;">barcode: {{ product.barcode }}</h6>
+          <ion-img v-if="product.img" :src="product.img"></ion-img>
+
+          <h3 style="margin-bottom: 30px;">{{ product.description }}</h3>
+          <h5>type: {{ product.type }}</h5>
+          <h5>rating: {{ product.rating }}</h5>
+          <ion-button color="danger" expand="block" @click="removeItem(product.name), deleteEvent(product.name)">Remove to pantry</ion-button>
+          <div style="margin-top: 20px;">
+            <div style="color: grey;">expiracy: {{ product.expiracy.toString().split('T')[0] }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAB RELOAD BUTTON -->
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button color="dark"  @click="products = [], getItems()">
+          <ion-icon :icon="refreshOutline"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
       
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, IonItem, IonButton, IonLabel, IonRefresher, IonRefresherContent } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonFab, IonFabButton, IonIcon } from '@ionic/vue';
 import { Storage } from '@capacitor/storage';
 import { defineComponent } from 'vue';
 import axios from "axios";
+import { refreshOutline } from 'ionicons/icons';
 
 interface RefresherEventDetail {
   complete(): void;
 }
-
+/*
 interface RefresherCustomEvent extends CustomEvent {
   detail: RefresherEventDetail;
   target: HTMLIonRefresherElement;
-}
+}*/
 
 export default defineComponent ({
   name: 'Tab2',
-  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, IonItem, IonButton, IonLabel, IonRefresher, IonRefresherContent },
+  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonButton, IonFab, IonFabButton, IonIcon },
 
   setup() {
-    /*
-    const doRefresh = (event: CustomEvent) => {
-      console.log('Begin async operation');
-      
-      setTimeout(() => {
-        console.log('Async operation has ended');
-        event.target.complete();
-      }, 2000);
-    }
-    */
     return {
-      //doRefresh
+      refreshOutline
     }
   },
 
   data() {
+    const dateNow = new Date();
     return {
       searchQuery: '',
-      products: []
+      products: [],
+      dateNow
     };
   },
 
@@ -97,6 +96,7 @@ export default defineComponent ({
   },
 
   beforeMount() {
+    /* DEFAULT CALL TO CHECK CREDENTIALS */
     axios.get(this.$store.state.projectEndPoint + 'products?barcode=0000000000000', {
       headers: {
         Authorization: this.$store.state.token
@@ -114,52 +114,36 @@ export default defineComponent ({
         resultQuery(){
           const prod: any[] = this.products;
           const src: string = this.searchQuery;
-          if(src !== ""){
+          if(src !== "" && src !== 'Fish' && src !== 'Meat' && src !== 'Sides' && src !== 'Home' && src !== 'Other'){
             return prod.filter((gg)=>{
               return src.toLowerCase().split(' ').every(v => gg.name.toLowerCase().includes(v))
             })
           }
-          /*
-          else if (this.searchQuery == "Nuovo"){
-            return this.items.filter((gg)=>{
-              return this.searchQuery.toLowerCase().split(' ').every(v => gg.stato.toLowerCase().includes(v))
+          else if (src == 'Fish'){
+            return prod.filter((gg)=>{
+              return src.toLowerCase().split(' ').every(v => gg.type.toLowerCase().includes(v))
             })
           }
-          else if (this.searchQuery == "Playstation 5"){
-            return this.items.filter((gg)=>{
-              return this.searchQuery.toLowerCase().split(' ').every(v => gg.platform.toLowerCase().includes(v))
+          else if (src == 'Meat'){
+            return prod.filter((gg)=>{
+              return src.toLowerCase().split(' ').every(v => gg.type.toLowerCase().includes(v))
             })
           }
-          else if (this.searchQuery == "Playstation 4"){
-            return this.items.filter((gg)=>{
-              return this.searchQuery.toLowerCase().split(' ').every(v => gg.platform.toLowerCase().includes(v))
+          else if (src == 'Sides'){
+            return prod.filter((gg)=>{
+              return src.toLowerCase().split(' ').every(v => gg.type.toLowerCase().includes(v))
             })
           }
-          else if (this.searchQuery == "Nintendo"){
-            return this.items.filter((gg)=>{
-              return this.searchQuery.toLowerCase().split(' ').every(v => gg.platform.toLowerCase().includes(v))
+          else if (src == 'Home'){
+            return prod.filter((gg)=>{
+              return src.toLowerCase().split(' ').every(v => gg.type.toLowerCase().includes(v))
             })
           }
-          else if (this.searchQuery == "Pc"){
-            return this.items.filter((gg)=>{
-              return this.searchQuery.toLowerCase().split(' ').every(v => gg.platform.toLowerCase().includes(v))
+          else if (src == 'Other'){
+            return prod.filter((gg)=>{
+              return src.toLowerCase().split(' ').every(v => gg.type.toLowerCase().includes(v))
             })
           }
-          else if (this.searchQuery == "Xbox One"){
-            return this.items.filter((gg)=>{
-              return this.searchQuery.toLowerCase().split(' ').every(v => gg.platform.toLowerCase().includes(v))
-            })
-          }
-          else if (this.searchQuery == "Xbox Serie X/S"){
-            return this.items.filter((gg)=>{
-              return this.searchQuery.toLowerCase().split(' ').every(v => gg.platform.toLowerCase().includes(v))
-            })
-          }
-          else if (this.searchQuery == "true"){
-            return this.items.filter((gg)=>{
-              return this.searchQuery.toLowerCase().split(' ').every(v => gg.disponibile.toLowerCase().includes(v))
-            })
-          }*/
           else{
             return prod;
           }
@@ -167,6 +151,8 @@ export default defineComponent ({
       },
 
   methods: {
+    /* CALL AL LOCAL DB TRAMITE VUEX */
+
     getKeys() {
       this.$store.commit('getKeys');
     },
@@ -175,14 +161,17 @@ export default defineComponent ({
       this.$store.commit('addKey');
     },
 
+    /* GET ITEMS IN LOCAL DATABASE */
     async getItems() {
       this.$store.commit('getItems', this.products);
+      console.log(this.products)
     },
 
     clear() {
       this.$store.commit('clearAll');
     },
 
+    /* REMOVE ITEM FROM DATABASE */
     removeItem(item: string) {
       this.$store.commit('removeItem', item);
     },
@@ -195,6 +184,21 @@ export default defineComponent ({
 </script>
 
 <style type="text/css">
+.card {
+  border: 2px solid white;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 10px;
+  text-align: center;
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.cardTitle {
+  margin-top: 0;
+  margin-bottom: 50px;
+}
+
   .searchbox {
     margin: 10px;
   }
@@ -208,5 +212,6 @@ export default defineComponent ({
     padding: 10px;
     border: 1px solid dark;
     border-radius: 20px;
+    height: 50px;
   }
 </style>
