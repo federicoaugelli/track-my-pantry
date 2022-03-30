@@ -16,12 +16,6 @@
       <!-- POST PREFERENCES MODAL -->
       <ion-modal :is-open="isOpenRef" css-class="my-custom-class" @didDismiss="setOpen(false)">
         <Modal :data="data">
-          <ion-header color="jjj">
-          <ion-toolbar>
-            <ion-title>Add {{ modalProduct.name }} to pantry?</ion-title>
-            <ion-button slot="end" @click="setOpen(false)" color="jjj">Close</ion-button>
-          </ion-toolbar>
-        </ion-header>
             <div class="modalItem">
               <h1 class="cardTitle">{{ modalProduct.name }}</h1>
               <ion-text>

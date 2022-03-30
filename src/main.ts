@@ -24,8 +24,6 @@ import '@ionic/vue/css/display.css';
 import './theme/variables.css';
 
 
-//export const token = ''
-
 const app = createApp(App)
   .use(store)
   .use(IonicVue)
