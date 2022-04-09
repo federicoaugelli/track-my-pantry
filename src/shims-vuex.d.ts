@@ -7,7 +7,9 @@ declare module '@vue/runtime-core' {
     count: number,
     token: '',
     projectEndPoint: 'https://lam21.iot-prism-lab.cs.unibo.it/',
-    sessiontoken: ''
+    sessiontoken: '',
+    currentUser: '',
+    localItems: Array
   }
 
   interface ComponentCustomProperties {

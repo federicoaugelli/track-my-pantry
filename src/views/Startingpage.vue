@@ -88,7 +88,7 @@ export default defineComponent ({
 			})
 			.catch(error => {
 				console.log(error)
-				this.openFailedToast();
+				this.openFailedToast(error);
       })
 		},
 
@@ -96,13 +96,16 @@ export default defineComponent ({
 		login() {
 			const loginform = { email: this.emaillogin, password: this.passwordlogin }
 			axios.post(this.$store.state.projectEndPoint + "auth/login", loginform).then((result) => {
-				this.$router.push('/tabs/tab1')
+				this.$router.push('/tabs/tab2')
 				console.log(result.data.accessToken)
 				const init = new String("Bearer ")
 				this.$store.state.token = init + result.data.accessToken
+				//this.$store.state.currentUser = this.emaillogin
+				this.$store.commit('setUser', this.emaillogin);
+				console.log(this.$store.state.currentUser)
 			})
 			.catch(error => {
-				this.openUnsuccessLoginToast();
+				this.openUnsuccessLoginToast(error);
       })
 		},
 
@@ -117,20 +120,20 @@ export default defineComponent ({
       return toast.present();
     },
 
-		async openFailedToast() {
+		async openFailedToast(error: string) {
       const toast = await toastController
         .create({
-          message: 'Error, user already exist!',
+          message: error,
           duration: 2000,
           position: "top"
         })
       return toast.present();
     },
 
-		async openUnsuccessLoginToast() {
+		async openUnsuccessLoginToast(error: string) {
       const toast = await toastController
         .create({
-          message: 'Incorrect username or password!',
+          message: error,
           duration: 2000,
           position: "top"
         })

@@ -13,86 +13,128 @@
         </ion-toolbar>
       </ion-header>
 
+      <!-- VOTES MODAL -->
+      <ion-modal
+        :is-open="isOpenRef" :swipe-to-close="true" @didDismiss="setOpen(false)">
+        <Modal :data="data">
+          <ion-toolbar>
+            <ion-title size="large">Vote {{ modalProduct.name }}</ion-title>
+            <ion-button slot="end" color="light" @click="setOpen(false)">close</ion-button>
+          </ion-toolbar>
+          <ion-card>
+            <ion-card-header>
+              <ion-card-subtitle>barcode: {{ modalProduct.barcode }}</ion-card-subtitle>
+              <ion-card-title>description: {{ modalProduct.description }}</ion-card-title>
+                <ion-text>
+                  <h4>rating: </h4>
+                </ion-text>
+                <ion-input type="number" inputmode="numeric" max="5" min="0" enterkeyhint="submit" v-model="vote"></ion-input>
+                <ion-button expand="block" color="dark" @click="votes(vote, modalProduct)">vote</ion-button>
+            </ion-card-header>
+          </ion-card>
+        </Modal>
+      </ion-modal>
+
       <!-- SEARCHBOX -->
       <div class="searchbox">
-        <input class="searchbar" type="search" placeholder="search" v-model="searchQuery">
+        <input v-if="searchQuery.includes('filter: ')" class="searchbar" type="disabled" placeholder="search" disabled>
+        <input v-else class="searchbar" type="search" placeholder="search" v-model="searchQuery">
       </div>
 
       <!-- FILTERBOX -->
-      <div style="text-align: center;">
-        <ion-button @click="searchQuery = 'Fish'" color="dark" size="small">fish</ion-button>
-        <ion-button @click="searchQuery = 'Meat'" color="dark" size="small">meat</ion-button>
-        <ion-button @click="searchQuery = 'Sides'" color="dark" size="small">sides</ion-button>
-        <ion-button @click="searchQuery = 'Home'" color="dark" size="small">home</ion-button>
-        <ion-button @click="searchQuery = 'Other'" color="dark" size="small">other</ion-button>
-        <ion-button v-if="searchQuery != ''" @click="searchQuery = ''" color="danger" size="small">cancel</ion-button>
+      <div style="overflow: scroll; text-overflow: ellipsis; white-space: nowrap; text-align: center;">
+            <ion-button v-if="searchQuery != ''" @click="searchQuery = ''" color="danger" size="small"><ion-icon :icon="closeOutline" /></ion-button>
+
+            <!-- Computed? -->
+            <ion-button v-for="(item, index) in filteredFilter" :key="index" @click="searchQuery = 'filter: ' + item.type" color="dark" size="small">{{ item.type }}</ion-button>
       </div>
 
       <!-- card -->
-      <div style="margin-top: 10px" class="card" v-for="(product, index) in resultQuery" :key="index">
-        <div v-if="product.barcode != ''">
-          <h1 style="margin-bottom: 20px">{{ product.name }}</h1>
+      <div v-for="(product, index) in resultQuery" :key="index">
+      <div style="margin-top: 10px" class="card" v-if="product.barcode != '' && product.user == this.$store.state.currentUser">
+        <div>
+          <h1 style="margin-bottom: 20px">{{ product.name }}<h2 v-if="Date.parse(product.expiracy.toString().split('T')[0]) < Date.parse(dateNow)" style="color: red">Expired</h2></h1>
           <h6 style="color: grey;">barcode: {{ product.barcode }}</h6>
           <ion-img v-if="product.img" :src="product.img"></ion-img>
 
           <h3 style="margin-bottom: 30px;">{{ product.description }}</h3>
           <h5>type: {{ product.type }}</h5>
-          <h5>rating: {{ product.rating }}</h5>
-          <ion-button color="danger" expand="block" @click="removeItem(product.name), deleteEvent(product.name)">Remove to pantry</ion-button>
+          <h5 v-if="product.rating != ''">rating: {{ product.rating }}</h5>
+          <ion-row>
+            <ion-col>
+              <ion-button  color="danger" expand="block" @click="removeItem(product.name); deleteEvent(product.name)">Remove</ion-button>
+            </ion-col>
+            <ion-col v-if="product.rating == ''">
+              <ion-button expand="block" color="dark" @click="modalProduct = product; setOpen(true)">Vote</ion-button>
+            </ion-col>
+            <ion-col>
+              <ion-button color="success" expand="block" @click="openMap(product.latitude, product.longitude)">open on map</ion-button>
+            </ion-col>
+          </ion-row>
           <div style="margin-top: 20px;">
             <div style="color: grey;">expiracy: {{ product.expiracy.toString().split('T')[0] }}</div>
           </div>
         </div>
       </div>
-
-      <!-- FAB RELOAD BUTTON -->
-      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button color="dark"  @click="products = [], getItems()">
-          <ion-icon :icon="refreshOutline"></ion-icon>
-        </ion-fab-button>
-      </ion-fab>
+      </div>
       
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonFab, IonFabButton, IonIcon } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonModal, IonRow, IonCol, IonCard, IonCardHeader, IonCardTitle, toastController, IonInput } from '@ionic/vue';
 import { Storage } from '@capacitor/storage';
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
 import axios from "axios";
-import { refreshOutline } from 'ionicons/icons';
+import { refreshOutline, closeOutline } from 'ionicons/icons';
 
 interface RefresherEventDetail {
   complete(): void;
 }
-/*
-interface RefresherCustomEvent extends CustomEvent {
-  detail: RefresherEventDetail;
-  target: HTMLIonRefresherElement;
-}*/
 
 export default defineComponent ({
   name: 'Tab2',
-  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonButton, IonFab, IonFabButton, IonIcon },
+  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonButton, IonIcon, IonModal, IonRow, IonCol, IonCard, IonCardHeader, IonCardTitle, IonInput },
 
   setup() {
+    const isOpenRef = ref(false);
+    const setOpen = (state: boolean) => isOpenRef.value = state;
+    const data = { content: 'New Content' };
     return {
-      refreshOutline
-    }
+      isOpenRef,
+      setOpen,
+      data,
+      refreshOutline,
+      closeOutline
+    };
   },
 
   data() {
-    const dateNow = new Date();
+    const dateNow = '';
+    const filters: any[] = [];
+    const products: any[] = [];
+    const modalProduct: any[] = [];
+    const vote = 0;
     return {
       searchQuery: '',
-      products: [],
-      dateNow
+      products,
+      filters,
+      dateNow,
+      modalProduct,
+      vote
     };
   },
 
   created() {
     this.getItems();
+
+    //set current time
+    const date = new Date();
+    this.dateNow = date.getFullYear() + '-' + date.getMonth() + '-' + date.getDate();
+    console.log(date.getTime())
+
+    //setInterval(this.getItems, 10000);
   },
 
   beforeMount() {
@@ -110,47 +152,81 @@ export default defineComponent ({
   },
 
   computed: {
+
+
         //Funzione per la ricerca della searchbar e per i filtri della filterbar
         resultQuery(){
-          const prod: any[] = this.products;
-          const src: string = this.searchQuery;
-          if(src !== "" && src !== 'Fish' && src !== 'Meat' && src !== 'Sides' && src !== 'Home' && src !== 'Other'){
-            return prod.filter((gg)=>{
+          this.$forceUpdate();
+          console.log(this.$store.state.localItems.length)
+          /*
+          let prod: any[] = this.$store.state.localItems;
+          if (prod != this.$store.state.localItems){
+            prod = this.$store.state.localItems;
+          }*/
+          let src: string = this.searchQuery;
+          if(src !== "" && src.indexOf("filter: ") === -1){
+            return this.$store.state.localItems.filter((gg: any)=>{
               return src.toLowerCase().split(' ').every(v => gg.name.toLowerCase().includes(v))
             })
           }
-          else if (src == 'Fish'){
-            return prod.filter((gg)=>{
-              return src.toLowerCase().split(' ').every(v => gg.type.toLowerCase().includes(v))
-            })
-          }
-          else if (src == 'Meat'){
-            return prod.filter((gg)=>{
-              return src.toLowerCase().split(' ').every(v => gg.type.toLowerCase().includes(v))
-            })
-          }
-          else if (src == 'Sides'){
-            return prod.filter((gg)=>{
-              return src.toLowerCase().split(' ').every(v => gg.type.toLowerCase().includes(v))
-            })
-          }
-          else if (src == 'Home'){
-            return prod.filter((gg)=>{
-              return src.toLowerCase().split(' ').every(v => gg.type.toLowerCase().includes(v))
-            })
-          }
-          else if (src == 'Other'){
-            return prod.filter((gg)=>{
+          else if (src.includes('filter: ')){
+            src = src.replace('filter: ','')
+            return this.$store.state.localItems.filter((gg: any)=>{
               return src.toLowerCase().split(' ').every(v => gg.type.toLowerCase().includes(v))
             })
           }
           else{
-            return prod;
+            return this.$store.state.localItems;
           }
         },
+
+        //computed filters for single user
+        filteredFilter(){
+          let fil: any[] = this.$store.state.localItems
+
+          const cleaned: any[] = [];
+          fil.forEach(function(itm) {
+            let unique = true;
+            cleaned.forEach(function(itm2) {
+            if (itm.type == itm2.type) unique = false;
+            });
+            if (unique)  cleaned.push(itm);
+          });
+          fil = cleaned;
+
+          return fil.filter(btn => {
+            return btn.user.toLowerCase().includes(this.$store.state.currentUser);
+          })
+        }
       },
 
   methods: {
+    async openSuccessVote() {
+      const toast = await toastController
+        .create({
+          message: 'Operation performed successfully!',
+          duration: 2000,
+          position: "top"
+        })
+      return toast.present();
+    },
+
+    async openFailToast(error: string) {
+      const toast = await toastController
+        .create({
+          message: error,
+          duration: 2000,
+          position: "top"
+        })
+      return toast.present();
+    },
+
+    openMap(lat: number, long: number){
+      console.log(lat + ', ' + long)
+      window.location.href = 'maps://maps.apple.com/?11=' + long + ', ' + lat;
+    },
+
+
     /* CALL AL LOCAL DB TRAMITE VUEX */
 
     getKeys() {
@@ -163,8 +239,12 @@ export default defineComponent ({
 
     /* GET ITEMS IN LOCAL DATABASE */
     async getItems() {
+      //this.products = [];
       this.$store.commit('getItems', this.products);
-      console.log(this.products)
+      this.$store.state.localItems = this.products;
+      //this.$store.state.localItems.push(this.products); //is not a function???
+      console.log('siui' + this.$store.state.localItems);
+      console.log('siui' + this.products)
     },
 
     clear() {
@@ -174,11 +254,53 @@ export default defineComponent ({
     /* REMOVE ITEM FROM DATABASE */
     removeItem(item: string) {
       this.$store.commit('removeItem', item);
+      //this.$store.state.localItems.splice(this.$store.state.localItems.indexOf(item), 1);
+      //console.log(this.$store.state.localItems.indexOf(item))
     },
 
     deleteEvent(item: never) {
-      this.products.splice(this.products.indexOf(item), 1);
-    }
+      let pos = 0;
+      for(let i = 0; i < this.$store.state.localItems.length; i++){
+        if(this.$store.state.localItems[i].name == item){
+          pos = i;
+        }
+      }
+      this.$store.state.localItems.splice(pos, 1);
+    },
+
+    votes(rate: string, obj: any) {
+      const data = {
+        token: this.$store.state.sessiontoken,
+        rating: Number(this.vote),
+        productId: obj.id
+      }
+
+      for(let i = 0; i < this.$store.state.localItems.length; i++){
+        console.log(this.$store.state.localItems[i])
+      } 
+      console.log('rating: ' + this.vote + ' id: ' + obj.id + ' token: ' + this.$store.state.sessiontoken);
+
+      axios.post(this.$store.state.projectEndPoint + "votes", data, {
+        headers: {
+          Authorization: this.$store.state.token
+        }
+      }).then(result => {
+        obj.rating = this.vote;
+        this.$store.commit('addKey', obj);
+        for(let i = 0; i < this.$store.state.localItems.length; i++){
+          if (this.$store.state.localItems[i] == obj.name){
+            this.$store.state.localItems[i].rating = this.vote;
+            console.log(this.$store.state.localItems[i].rating);
+          }
+        }
+        this.openSuccessVote()
+        this.setOpen(false)
+        this.vote = 0;
+      }).catch(error => {
+        console.log("error: " + error)
+        this.openFailToast(error);
+      })
+    },
   },
 })
 </script>

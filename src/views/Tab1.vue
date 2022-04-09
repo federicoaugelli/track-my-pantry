@@ -13,8 +13,25 @@
         </ion-toolbar>
       </ion-header>
 
+      <ion-menu side="start" menu-id="first" content-id="main">
+        <ion-header>
+          <ion-toolbar color="traslucent">
+            <ion-title>Menu</ion-title>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content>
+          <ion-list>
+            <ion-item-divider>Menu</ion-item-divider>
+            <ion-item @click="$router.push('/startingpage')">
+              <ion-icon slot="start" :icon="cartOutline" />
+              <ion-label>Log Out</ion-label>
+            </ion-item>
+          </ion-list>
+        </ion-content>
+      </ion-menu>
+
       <!-- POST PREFERENCES MODAL -->
-      <ion-modal :is-open="isOpenRef" css-class="my-custom-class" @didDismiss="setOpen(false)">
+      <ion-modal :is-open="isOpenRef" css-class="my-custom-class" :swipe-to-close="true" @didDismiss="setOpen(false)">
         <Modal :data="data">
             <div class="modalItem">
               <h1 class="cardTitle">{{ modalProduct.name }}</h1>
@@ -25,21 +42,17 @@
                 <h3>Description: {{ modalProduct.description }}</h3>
               </ion-text>
               <div>
+                <!-- rate
                 <ion-text>
                   <h4>rating: </h4>
                 </ion-text>
                 <ion-input type="number" inputmode="numeric" max="5" min="0" enterkeyhint="submit" v-model="vote"></ion-input>
+                -->
 
-                <ion-item>
-                  <ion-label>type</ion-label>
-                  <ion-select value="other" ok-text="Okay" cancel-text="Dismiss" v-model="type">
-                    <ion-select-option value="Fish">Fish</ion-select-option>
-                    <ion-select-option value="Meat">Meat</ion-select-option>
-                    <ion-select-option value="Sides">Sides</ion-select-option>
-                    <ion-select-option value="Home">Home</ion-select-option>
-                    <ion-select-option value="Other">Other</ion-select-option>
-                  </ion-select>
-                </ion-item>
+                <ion-text>
+                  <h4>Type: </h4>
+                </ion-text>
+                <ion-input enterkeyhint="submit" v-model="type"></ion-input>
 
                 <ion-text>
                   <h4>expiracy: </h4>
@@ -50,7 +63,7 @@
               <ion-item-divider></ion-item-divider>
               <!--
               <ion-button style="text-align: center;" size="medium" color="secondary" @click="votes(vote, modalProduct.id)">Vote</ion-button>-->
-              <ion-button style="text-align: center;" size="medium" color="success" @click="votes(vote, modalProduct.id)">Add to Pantry</ion-button>
+              <ion-button style="text-align: center;" size="medium" color="success" @click="/*votes(vote, modalProduct.id)*/addLocal(modalProduct, type, '')">Add to Pantry</ion-button>
             </div>
         </Modal>
       </ion-modal>
@@ -83,24 +96,37 @@
           </div>
         </div>
       </div>
+
+      <!-- Barcode scan -->
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button color="dark" @click="scanBarcode()">
+          <ion-icon :icon="barcodeOutline"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
     
     </ion-content>
   </ion-page>
 </template>
 
 <script lang="ts">
-import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, modalController, IonLabel, IonItem, IonButton, IonItemDivider, toastController, IonModal, IonDatetime, IonInput, IonSelect, IonSelectOption } from '@ionic/vue';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, modalController, IonLabel, IonButton, IonItemDivider, toastController, IonModal, IonDatetime, IonInput, IonFab, IonFabButton, IonIcon, IonMenu, IonList } from '@ionic/vue';
 import { barcodeOutline, searchOutline } from 'ionicons/icons';
 import { defineComponent, ref } from 'vue';
 import axios from "axios";
 import postProductModal from "@/components/modal.vue";
-//import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner';
+import { BarcodeScanner } from '@awesome-cordova-plugins/barcode-scanner';
+import { Geolocation } from '@awesome-cordova-plugins/geolocation';
 //import Modal from './modal.vue';
+
 
 
 export default defineComponent ({
   name: 'Tab1',
-  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonLabel, IonItem, IonButton, IonItemDivider, IonModal, IonDatetime, IonInput, IonSelect, IonSelectOption },
+  components: { IonHeader, IonToolbar, IonTitle, IonContent, IonPage, IonLabel, IonButton, IonItemDivider, IonModal, IonDatetime, IonInput, IonFab, IonFabButton, IonIcon, IonMenu, IonList },
+
+  //constructor(private barcodeScanner: BarcodeScanner) { },
+  //constructor(private geolocation: Geolocation) {},
+
   setup() {
     const isOpenRef = ref(false);
     const setOpen = (state: boolean) => isOpenRef.value = state;
@@ -123,7 +149,9 @@ export default defineComponent ({
       vote: '',
       showVote: true,
       type: '',
-      expdate: ''
+      expdate: '',
+      latitude: 0,
+      longitude: 0
     };
   },
 
@@ -162,15 +190,39 @@ export default defineComponent ({
       return toast.present();
     },
 
-    async openFailToast() {
+    async openFailToast(error: string) {
       const toast = await toastController
         .create({
-          message: 'Error',
+          message: error,
           duration: 2000,
           position: "top"
         })
       return toast.present();
     },
+
+    /* RETURN POSITION */
+    returnPosition() {
+      Geolocation.getCurrentPosition().then((resp) => {
+        this.latitude = resp.coords.latitude
+        this.longitude = resp.coords.longitude
+        console.log(resp.coords.latitude)
+        console.log(resp.coords.longitude)
+      }).catch((error) => {
+        console.log('Error getting location', error);
+      });
+    },
+
+    /* SCAN BARCODE */
+    async scanBarcode() {
+      BarcodeScanner.scan().then(barcodeData => {
+        this.barcode = barcodeData.toString();
+        this.getProductbyBarcode();
+        console.log('Barcode data', barcodeData);
+      }).catch(err => {
+        console.log('Error', err);
+      });
+      //this.barcode = await BarcodeScanner.scan().toString()
+    }, 
 
     /* GET PRODUCTS BY BARCODE */
     getProductbyBarcode() {
@@ -184,7 +236,7 @@ export default defineComponent ({
         console.log(this.$store.state.sessiontoken)
       }).catch(error => {
         console.log(error)
-        this.openFailToast();
+        this.openFailToast(error);
       })
     },
 
@@ -202,9 +254,9 @@ export default defineComponent ({
       }).then(result => {
         this.setOpen(false)
         this.openSuccessVote()
-        this.addLocal(this.modalProduct, this.type, this.vote)
+        //this.addLocal(this.modalProduct, this.type, this.vote)
       }).catch(error => {
-        this.openFailToast();
+        this.openFailToast(error);
       })
     },
 
@@ -223,6 +275,7 @@ export default defineComponent ({
     addLocal(elem: any, type: string, vote: string) {
       console.log(vote);
       console.log(type);
+      this.returnPosition();
       const item = {
         id: elem.id,
         name: elem.name,
@@ -234,10 +287,14 @@ export default defineComponent ({
         updatedAt: elem.updatedAt,
         rating: vote,
         type: type,
-        expiracy: this.expdate
+        expiracy: this.expdate,
+        latitude: this.latitude,
+        longitude: this.longitude
       }
-
+      this.setOpen(false)
       this.$store.commit('addKey', item);
+      this.$store.state.localItems.push(item);
+      console.log(this.$store.state.localItems)
       this.openSuccessToast();
     },
   },

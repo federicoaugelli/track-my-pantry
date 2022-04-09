@@ -4,17 +4,23 @@ import { Storage } from '@ionic/storage';
 const ionicStorage = new Storage();
 ionicStorage.create();
 
+
 export default createStore({
   state: {
     token: '',
     projectEndPoint: 'https://lam21.iot-prism-lab.cs.unibo.it/',
     sessiontoken: '',
     barcode: '',
-    //items: []
+    currentUser: ''.toString(),
+    localItems: ''
   },
   getters: {
   },
   mutations: {
+    setUser(state, usr) {
+      state.currentUser = usr;
+    },
+
     updataa(state, tok) {
       state.sessiontoken = tok;
     },
@@ -44,7 +50,10 @@ export default createStore({
         updatedAt: elem.updatedAt,
         rating: elem.rating,
         type: elem.type,
-        expiracy: elem.expiracy
+        expiracy: elem.expiracy,
+        user: state.currentUser,
+        latitude: elem.latitude,
+        longitude: elem.longitude
       }
       ionicStorage.set(elem.name, payload);
     },
