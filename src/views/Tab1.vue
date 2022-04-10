@@ -100,7 +100,7 @@
       <!-- Barcode scan -->
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
         <ion-fab-button color="dark" @click="scanBarcode()">
-          <ion-icon :icon="barcodeOutline"></ion-icon>
+          <ion-icon :icon="addOutline"></ion-icon>
         </ion-fab-button>
       </ion-fab>
     
@@ -110,7 +110,7 @@
 
 <script lang="ts">
 import { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, modalController, IonLabel, IonButton, IonItemDivider, toastController, IonModal, IonDatetime, IonInput, IonFab, IonFabButton, IonIcon, IonMenu, IonList } from '@ionic/vue';
-import { barcodeOutline, searchOutline } from 'ionicons/icons';
+import { addOutline, searchOutline } from 'ionicons/icons';
 import { defineComponent, ref } from 'vue';
 import axios from "axios";
 import postProductModal from "@/components/modal.vue";
@@ -132,7 +132,7 @@ export default defineComponent ({
     const setOpen = (state: boolean) => isOpenRef.value = state;
     const data = { content: 'Votes' };
     return {
-      barcodeOutline,
+      addOutline,
       searchOutline,
       isOpenRef, 
       setOpen, 
@@ -205,10 +205,8 @@ export default defineComponent ({
       Geolocation.getCurrentPosition().then((resp) => {
         this.latitude = resp.coords.latitude
         this.longitude = resp.coords.longitude
-        console.log(resp.coords.latitude)
-        console.log(resp.coords.longitude)
       }).catch((error) => {
-        console.log('Error getting location', error);
+        this.openFailToast(error);
       });
     },
 

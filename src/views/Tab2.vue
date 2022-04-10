@@ -18,17 +18,17 @@
         :is-open="isOpenRef" :swipe-to-close="true" @didDismiss="setOpen(false)">
         <Modal :data="data">
           <ion-toolbar>
-            <ion-title size="large">Vote {{ modalProduct.name }}</ion-title>
-            <ion-button slot="end" color="light" @click="setOpen(false)">close</ion-button>
           </ion-toolbar>
           <ion-card>
             <ion-card-header>
+              <ion-card-title size="large">Vote {{ modalProduct.name }}</ion-card-title>
+              <div style="margin: 25px"></div>
               <ion-card-subtitle>barcode: {{ modalProduct.barcode }}</ion-card-subtitle>
               <ion-card-title>description: {{ modalProduct.description }}</ion-card-title>
                 <ion-text>
                   <h4>rating: </h4>
                 </ion-text>
-                <ion-input type="number" inputmode="numeric" max="5" min="0" enterkeyhint="submit" v-model="vote"></ion-input>
+                <ion-input type="number" inputmode="numeric" max="5" min="1" enterkeyhint="submit" v-model="vote"></ion-input>
                 <ion-button expand="block" color="dark" @click="votes(vote, modalProduct)">vote</ion-button>
             </ion-card-header>
           </ion-card>
@@ -68,7 +68,7 @@
               <ion-button expand="block" color="dark" @click="modalProduct = product; setOpen(true)">Vote</ion-button>
             </ion-col>
             <ion-col>
-              <ion-button color="success" expand="block" @click="openMap(product.latitude, product.longitude)">open on map</ion-button>
+              <ion-button color="success" expand="block" @click="openMap(product.latitude, product.longitude)">open map</ion-button>
             </ion-col>
           </ion-row>
           <div style="margin-top: 20px;">
@@ -201,6 +201,7 @@ export default defineComponent ({
       },
 
   methods: {
+
     async openSuccessVote() {
       const toast = await toastController
         .create({
@@ -223,7 +224,7 @@ export default defineComponent ({
 
     openMap(lat: number, long: number){
       console.log(lat + ', ' + long)
-      window.location.href = 'maps://maps.apple.com/?11=' + long + ', ' + lat;
+      //window.location.href = 'maps://maps.apple.com/?11=' + long + ', ' + lat;
     },
 
 
