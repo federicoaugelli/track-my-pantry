@@ -46,7 +46,7 @@
             <ion-button v-if="searchQuery != ''" @click="searchQuery = ''" color="danger" size="small"><ion-icon :icon="closeOutline" /></ion-button>
 
             <!-- Computed? -->
-            <ion-button v-for="(item, index) in filteredFilter" :key="index" @click="searchQuery = 'filter: ' + item.type" color="dark" size="small">{{ item.type }}</ion-button>
+            <ion-button v-for="(item, index) in filteredFilter" :key="index" @click="searchQuery = 'filter: ' + item.type" size="small" color="dark">{{ item.type }}</ion-button>
       </div>
 
       <!-- card -->
@@ -158,11 +158,6 @@ export default defineComponent ({
         resultQuery(){
           this.$forceUpdate();
           console.log(this.$store.state.localItems.length)
-          /*
-          let prod: any[] = this.$store.state.localItems;
-          if (prod != this.$store.state.localItems){
-            prod = this.$store.state.localItems;
-          }*/
           let src: string = this.searchQuery;
           if(src !== "" && src.indexOf("filter: ") === -1){
             return this.$store.state.localItems.filter((gg: any)=>{
@@ -224,7 +219,7 @@ export default defineComponent ({
 
     openMap(lat: number, long: number){
       console.log(lat + ', ' + long)
-      //window.location.href = 'maps://maps.apple.com/?11=' + long + ', ' + lat;
+      window.location.href = 'maps://maps.apple.com/?11=' + long + ', ' + lat;
     },
 
 

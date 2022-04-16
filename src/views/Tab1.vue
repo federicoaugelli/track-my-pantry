@@ -99,7 +99,7 @@
 
       <!-- Barcode scan -->
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button color="dark" @click="scanBarcode()">
+        <ion-fab-button color="dark" @click="openModal()">
           <ion-icon :icon="addOutline"></ion-icon>
         </ion-fab-button>
       </ion-fab>
@@ -287,12 +287,13 @@ export default defineComponent ({
         type: type,
         expiracy: this.expdate,
         latitude: this.latitude,
-        longitude: this.longitude
+        longitude: this.longitude,
+        user: this.$store.state.currentUser
       }
-      this.setOpen(false)
+      this.setOpen(false);
       this.$store.commit('addKey', item);
       this.$store.state.localItems.push(item);
-      console.log(this.$store.state.localItems)
+      console.log(this.$store.state.localItems);
       this.openSuccessToast();
     },
   },
